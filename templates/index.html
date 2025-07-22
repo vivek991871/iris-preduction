@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Flower Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Animated background particles */
+        .bg-particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .bg-particle:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .bg-particle:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+        
+        .bg-particle:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .iris-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .input-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+        
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #111827;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .input-field::placeholder {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
+        .predict-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .predict-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .predict-btn:hover::before {
+            left: 100%;
+        }
+        
+        .predict-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+        
+        .predict-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .result.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .result.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+        
+        .species-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .species-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 6px;
+        }
+        
+        .species-description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .iris-icon {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-particle"></div>
+    <div class="bg-particle"></div>
+    <div class="bg-particle"></div>
+    
+    <div class="container">
+        <div class="header">
+            <span class="iris-icon">🌸</span>
+            <h1>Iris Flower Predictor</h1>
+            <p class="subtitle">Identify iris species with AI precision</p>
+        </div>
+        
+        <form id="predictForm" method="POST">
+            <div class="input-group">
+                <label class="input-label">Sepal Length</label>
+                <input 
+                    type="number" 
+                    name="sepal_length" 
+                    class="input-field" 
+                    placeholder="Enter length in cm (e.g., 5.1)"
+                    step="0.1"
+                    min="0"
+                    required>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Sepal Width</label>
+                <input 
+                    type="number" 
+                    name="sepal_width" 
+                    class="input-field" 
+                    placeholder="Enter width in cm (e.g., 3.5)"
+                    step="0.1"
+                    min="0"
+                    required>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Petal Length</label>
+                <input 
+                    type="number" 
+                    name="petal_length" 
+                    class="input-field" 
+                    placeholder="Enter length in cm (e.g., 1.4)"
+                    step="0.1"
+                    min="0"
+                    required>
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Petal Width</label>
+                <input 
+                    type="number" 
+                    name="petal_width" 
+                    class="input-field" 
+                    placeholder="Enter width in cm (e.g., 0.2)"
+                    step="0.1"
+                    min="0"
+                    required>
+            </div>
+            
+            <button type="submit" class="predict-btn">
+                🔮 Predict Species
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing flower characteristics...</p>
+        </div>
+        
+        <div class="result" id="result">
+            <!-- Results will appear here -->
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('predictForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        
+        const speciesInfo = {
+            'setosa': {
+                name: 'Iris Setosa',
+                description: 'Also known as the bristle-pointed iris, this species is characterized by its smaller petals and distinctive bristle-like tips.'
+            },
+            'versicolor': {
+                name: 'Iris Versicolor',
+                description: 'The blue flag iris features moderate-sized flowers with distinctive veining patterns and grows well in wet conditions.'
+            },
+            'virginica': {
+                name: 'Iris Virginica',
+                description: 'The Virginia iris is the largest of the three species, with broad petals and sepals, often found in coastal areas.'
+            }
+        };
+        
+        // Add input validation and formatting
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('input', function() {
+                // Remove invalid characters
+                this.value = this.value.replace(/[^0-9.]/g, '');
+                
+                // Ensure only one decimal point
+                const parts = this.value.split('.');
+                if (parts.length > 2) {
+                    this.value = parts[0] + '.' + parts.slice(1).join('');
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                if (this.value && !isNaN(this.value)) {
+                    this.value = parseFloat(this.value).toFixed(1);
+                }
+            });
+        });
+        
+        // Since we can't actually make backend calls, simulate the prediction
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            loading.classList.add('show');
+            result.classList.remove('show');
+            
+            // Get form data
+            const formData = new FormData(form);
+            const sepalLength = parseFloat(formData.get('sepal_length'));
+            const sepalWidth = parseFloat(formData.get('sepal_width'));
+            const petalLength = parseFloat(formData.get('petal_length'));
+            const petalWidth = parseFloat(formData.get('petal_width'));
+            
+            // Validate inputs
+            if (isNaN(sepalLength) || isNaN(sepalWidth) || isNaN(petalLength) || isNaN(petalWidth)) {
+                showError('Please enter valid numeric values for all measurements.');
+                return;
+            }
+            
+            if (sepalLength <= 0 || sepalWidth <= 0 || petalLength <= 0 || petalWidth <= 0) {
+                showError('All measurements must be positive numbers.');
+                return;
+            }
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // Simple rule-based prediction (replace with actual backend call)
+                let species = predictSpecies(sepalLength, sepalWidth, petalLength, petalWidth);
+                showSuccess(species);
+            }, 1500);
+        });
+        
+        function predictSpecies(sepalLength, sepalWidth, petalLength, petalWidth) {
+            // Simple rule-based classification (replace with actual model)
+            if (petalLength < 2.5) {
+                return 'setosa';
+            } else if (petalLength < 5.0) {
+                return 'versicolor';
+            } else {
+                return 'virginica';
+            }
+        }
+        
+        function showSuccess(species) {
+            loading.classList.remove('show');
+            
+            const info = speciesInfo[species];
+            result.innerHTML = `
+                <div>
+                    <div class="species-name">${info.name}</div>
+                    <div class="species-info">
+                        <div class="species-description">${info.description}</div>
+                    </div>
+                </div>
+            `;
+            
+            result.className = 'result success show';
+        }
+        
+        function showError(message) {
+            loading.classList.remove('show');
+            result.innerHTML = `
+                <div>
+                    <strong>⚠️ Error</strong><br>
+                    ${message}
+                </div>
+            `;
+            result.className = 'result error show';
+        }
+        
+        // Add some interactive effects
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
